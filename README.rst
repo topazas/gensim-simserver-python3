@@ -2,6 +2,7 @@
 simserver -- document similarity server in Python
 ==================================================
 
+This is gensim simserver version for Python3 converted with 2to3 tool.
 
 Index plain text documents and query the index for semantically related documents.
 
