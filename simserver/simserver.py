@@ -23,7 +23,7 @@ is virtually no down-time.
 
 """
 
-from __future__ import with_statement
+
 
 import os
 import logging
@@ -128,9 +128,9 @@ class SimIndex(gensim.utils.SaveLoad):
             try:
                 os.remove(fname)
                 logger.info("deleted %s" % fname)
-            except Exception, e:
+            except Exception as e:
                 logger.warning("failed to delete %s: %s" % (fname, e))
-        for val in self.__dict__.keys():
+        for val in list(self.__dict__.keys()):
             try:
                 delattr(self, val)
             except:
@@ -143,7 +143,7 @@ class SimIndex(gensim.utils.SaveLoad):
         the same id). `fresh_docs` is a dictionary-like object (=dict, sqlitedict, shelve etc)
         that maps document_id->document.
         """
-        docids = fresh_docs.keys()
+        docids = list(fresh_docs.keys())
         vectors = (model.docs2vecs(fresh_docs[docid] for docid in docids))
         logger.info("adding %i documents to %s" % (len(docids), self))
         self.qindex.add_documents(vectors)
@@ -172,7 +172,7 @@ class SimIndex(gensim.utils.SaveLoad):
 
     def update_mappings(self):
         """Synchronize id<->position mappings."""
-        self.pos2id = dict((v, k) for k, v in self.id2pos.iteritems())
+        self.pos2id = dict((v, k) for k, v in self.id2pos.items())
         assert len(self.pos2id) == len(self.id2pos), "duplicate ids or positions detected"
 
 
@@ -298,7 +298,7 @@ class SimIndex(gensim.utils.SaveLoad):
         return docid in self.id2pos
 
     def keys(self):
-        return self.id2pos.keys()
+        return list(self.id2pos.keys())
 
     def __str__(self):
         return "SimIndex(%i docs, %i real size)" % (len(self), self.length)
@@ -328,7 +328,7 @@ class SimModel(gensim.utils.SaveLoad):
             params = {}
         self.params = params
         logger.info("collecting %i document ids" % len(fresh_docs))
-        docids = fresh_docs.keys()
+        docids = list(fresh_docs.keys())
         logger.info("creating model from %s documents" % len(docids))
         preprocessed = lambda: (fresh_docs[docid]['tokens'] for docid in docids)
 
@@ -612,7 +612,7 @@ class SimServer(object):
             self.fresh_index = SimIndex(self.location('index_fresh'), self.model.num_features)
         self.fresh_index.index_documents(self.fresh_docs, self.model)
         if self.opt_index is not None:
-            self.opt_index.delete(self.fresh_docs.keys())
+            self.opt_index.delete(list(self.fresh_docs.keys()))
         logger.info("storing document payloads")
         for docid in self.fresh_docs:
             payload = self.fresh_docs[docid].get('payload', None)
@@ -673,7 +673,7 @@ class SimServer(object):
                 if os.path.exists(fname):
                     os.remove(fname)
                     logger.info("deleted %s" % fname)
-            except Exception, e:
+            except Exception as e:
                 logger.warning("failed to delete %s" % fname)
         self.payload = SqliteDict(self.location('payload'), autocommit=True, journal_mode=JOURNAL_MODE)
 
@@ -685,7 +685,7 @@ class SimServer(object):
                 if os.path.exists(fname):
                     os.remove(fname)
                     logger.info("deleted %s" % fname)
-            except Exception, e:
+            except Exception as e:
                 logger.warning("failed to delete %s" % fname)
             self.model = None
         self.flush(save_index=True, save_model=True, clear_buffer=True)
@@ -735,7 +735,7 @@ class SimServer(object):
         for index in [self.fresh_index, self.opt_index]:
             if index is not None:
                 index.topsims = max_results
-        if isinstance(doc, basestring):
+        if isinstance(doc, str):
             # query by direct document id
             docid = doc
             if self.opt_index is not None and docid in self.opt_index:
@@ -800,9 +800,9 @@ class SimServer(object):
         """Return ids of all indexed documents."""
         result = []
         if self.fresh_index is not None:
-            result += self.fresh_index.keys()
+            result += list(self.fresh_index.keys())
         if self.opt_index is not None:
-            result += self.opt_index.keys()
+            result += list(self.opt_index.keys())
         return result
 
     def memdebug(self):
@@ -870,7 +870,7 @@ class SessionServer(gensim.utils.SaveLoad):
         return len(self.stable)
 
     def keys(self):
-        return self.stable.keys()
+        return list(self.stable.keys())
 
     @gensim.utils.synchronous('lock_update')
     def check_session(self):
@@ -1030,12 +1030,12 @@ class SessionServer(gensim.utils.SaveLoad):
             logger.info("deleted server under %s" % self.basedir)
             # delete everything from self, so that using this object fails results
             # in an error as quickly as possible
-            for val in self.__dict__.keys():
+            for val in list(self.__dict__.keys()):
                 try:
                     delattr(self, val)
                 except:
                     pass
-        except Exception, e:
+        except Exception as e:
             logger.warning("failed to delete SessionServer: %s" % (e))
 
 

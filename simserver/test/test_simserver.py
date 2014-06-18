@@ -8,7 +8,7 @@
 Automated tests for checking similarity server.
 """
 
-from __future__ import with_statement
+
 
 import logging
 import sys
@@ -40,7 +40,7 @@ def mock_documents(language, category):
     # Create SimServer dicts from the texts. These are the object that the gensim
     # server expects as input. They must contain doc['id'] and doc['tokens'] attributes.
     docs = [{'id': '_'.join((language, category, str(num))),
-             'tokens': gensim.utils.simple_preprocess(document), 'payload': range(num),
+             'tokens': gensim.utils.simple_preprocess(document), 'payload': list(range(num)),
              'language': language, 'category': category}
             for num, document in enumerate(documents)]
     return docs
@@ -76,7 +76,7 @@ class SessionServerTester(unittest.TestCase):
         """Check that two returned lists of similarities are equal."""
         sims1 = dict(s[:2] for s in sims1)
         sims2 = dict(s[:2] for s in sims2)
-        for docid in set(sims1.keys() + sims2.keys()):
+        for docid in set(list(sims1.keys()) + list(sims2.keys())):
             self.assertTrue(numpy.allclose(sims1.get(docid, 0.0), sims2.get(docid, 0.0), atol=1e-7))
 
 
@@ -234,7 +234,7 @@ class SessionServerTester(unittest.TestCase):
         # create payload for three documents
         docs = deepcopy(self.docs)
         docs[0]['payload'] = 'some payload'
-        docs[1]['payload'] = range(10)
+        docs[1]['payload'] = list(range(10))
         docs[2]['payload'] = 3.14
         id2doc = dict((doc['id'], doc) for doc in docs)
 
